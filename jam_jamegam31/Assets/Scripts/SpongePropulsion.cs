@@ -11,6 +11,9 @@ public class SpongePropulsion : MonoBehaviour
 
     private float collisionTimer = 0f;
     private float water = 1f;
+    private bool jump = false;
+    private Vector3 jumpVec;
+    private bool isGrounded = true;
     // Start is called before the first frame update
     void Start()
     {
@@ -20,7 +23,26 @@ public class SpongePropulsion : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        collisionTimer += Time.deltaTime;
+        if(!isGrounded)
+        {
+            collisionTimer += Time.deltaTime;
+        }
+    }
+
+    private void FixedUpdate() 
+    {
+        if(jump)
+        {
+            myRb.AddForce(jumpVec * jumpForce, ForceMode.Impulse);
+            myRb.AddTorque(new Vector3(0f, 0f, -1f * Mathf.Clamp(jumpVec.x,-1f,1f) * jumpTorque), ForceMode.Impulse);
+            jump = false;
+        }
+        if(collisionTimer >= collisionDuration && myRb.velocity.magnitude <= 0.05f)
+        {
+            isGrounded = true;
+            collisionTimer = 0f;
+            jump = false;
+        }
     }
 
     public void Jump(Vector3 vec)
@@ -30,26 +52,21 @@ public class SpongePropulsion : MonoBehaviour
             print("failure: collisionTimer = " + collisionTimer + " > " + collisionDuration);
             return;
         }
-        Vector3 moveVec = vec.normalized * Mathf.Clamp(vec.magnitude / 5f, 0.5f, 1f);
-        myRb.AddForce(moveVec * jumpForce, ForceMode.Impulse);
-        myRb.AddTorque(new Vector3(0f, 0f, -1f * moveVec.x * jumpTorque), ForceMode.Impulse);
+        else if(jump)
+        {
+            print("failure: jump already called");
+            return;
+        }
+        jumpVec = vec.normalized * Mathf.Clamp(vec.magnitude / 5f, 0.5f, 1f);
+        jump = true;
         print("jump executed:" + vec.normalized);
         collisionTimer = collisionDuration;
     }
 
-    private void OnCollisionStay(Collision other)
-    {
-        collideHandler(other);
-    }
-
     private void OnCollisionEnter(Collision other)
     {
-        collideHandler(other);
-    }
-
-    void collideHandler(Collision other)
-    {
         collisionTimer = 0f;
+        isGrounded = true;
         print("collision stay; collisionTimer = " + collisionTimer);
         if(water > 0f)
         {
@@ -57,5 +74,10 @@ public class SpongePropulsion : MonoBehaviour
             // splash the stains in the area!
             // water -= amount
         }
+    }
+
+    private void OnCollisionExit(Collision other)
+    {
+        isGrounded = false;
     }
 }
