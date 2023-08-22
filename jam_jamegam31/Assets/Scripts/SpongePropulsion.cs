@@ -45,22 +45,23 @@ public class SpongePropulsion : MonoBehaviour
         }
     }
 
-    public void Jump(Vector3 vec)
+    public bool Jump(Vector3 vec)
     {
         if(collisionTimer >= collisionDuration)
         {
             print("failure: collisionTimer = " + collisionTimer + " > " + collisionDuration);
-            return;
+            return false;
         }
         else if(jump)
         {
             print("failure: jump already called");
-            return;
+            return false;
         }
         jumpVec = vec.normalized * Mathf.Clamp(vec.magnitude / 5f, 0.5f, 1f);
         jump = true;
         print("jump executed:" + vec.normalized);
         collisionTimer = collisionDuration;
+        return true;
     }
 
     private void OnCollisionEnter(Collision other)
