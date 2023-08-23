@@ -2,11 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class SpongePropulsion : MonoBehaviour
 {
     [SerializeField] private float jumpForce = 1f;
     [SerializeField] private float jumpTorque = 20f;
     [SerializeField] private Rigidbody myRb;
+
+    public AudioClip sound_jump;
+    AudioSource audioSource;
 
     private float water = 1f;
     private bool jump = false;
@@ -15,7 +19,7 @@ public class SpongePropulsion : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        audioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -28,31 +32,21 @@ public class SpongePropulsion : MonoBehaviour
     {
         if(jump && isGrounded)
         {
-            myRb.AddForce(jumpVec * jumpForce, ForceMode.Impulse);
+            // myRb.AddForce(jumpVec * jumpForce, ForceMode.Impulse);
+            myRb.velocity = jumpVec * jumpForce / myRb.mass;
             myRb.AddTorque(new Vector3(0f, 0f, -1f * jumpVec.x * jumpTorque), ForceMode.Impulse);
             jump = false;
-            isGrounded = false;
-        }
-        else if(myRb.velocity.magnitude <= 0.05f)
-        {
-            isGrounded = true;
-            jump = false;
+            audioSource.PlayOneShot(sound_jump);
         }
     }
 
     public bool Jump(Vector3 vec)
     {
-        if(!isGrounded)
+        if(!isGrounded || jump)
         {
-            print("failure: not grounded");
             return false;
         }
-        else if(jump)
-        {
-            print("failure: jump already called");
-            return false;
-        }
-        jumpVec = vec.normalized * Mathf.Clamp(vec.magnitude / 5f, 0.5f, 1f);
+        jumpVec = vec.normalized; // Mathf.Clamp(vec.magnitude / 5f, 0.5f, 1f);
         jump = true;
         print("jump executed:" + vec.normalized);
         return true;
@@ -70,8 +64,18 @@ public class SpongePropulsion : MonoBehaviour
         }
     }
 
+    private void OnCollisionStay(Collision other)
+    {
+        isGrounded = true;
+        if(water > 0f)
+        {
+            // create impact sound
+        }
+    }
+
     private void OnCollisionExit(Collision other)
     {
+        print("collision left");
         isGrounded = false;
     }
 }

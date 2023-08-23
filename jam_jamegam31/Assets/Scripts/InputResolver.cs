@@ -23,7 +23,7 @@ public class InputResolver : MonoBehaviour
     {
         Vector3 mPos = Input.mousePosition;
         mPos.z -= -10f; // compensates for camera offset
-        mPos.y -= 2f;
+        mPos.y -= 0f;
         Vector3 wPoint = Camera.main.ScreenToWorldPoint(mPos);
         mouseCursor.position = wPoint;
         if(lastBufferedClickTimer > 0)
