@@ -8,14 +8,19 @@ public class SpongePropulsion : MonoBehaviour
     [SerializeField] private float jumpForce = 1f;
     [SerializeField] private float jumpTorque = 20f;
     [SerializeField] private Rigidbody myRb;
+    [SerializeField] private ParticleSystem myPs;
 
     public AudioClip sound_jump;
+    public AudioClip sound_dash;
+    public AudioClip sound_impact;
+    public AudioClip sound_splash;
     AudioSource audioSource;
 
     private float water = 1f;
     private bool jump = false;
     private Vector3 jumpVec;
     private bool isGrounded = true;
+    private bool dashStored = true;
     // Start is called before the first frame update
     void Start()
     {
@@ -28,9 +33,9 @@ public class SpongePropulsion : MonoBehaviour
         //
     }
 
-    private void FixedUpdate() 
+    private void FixedUpdate()
     {
-        if(jump && isGrounded)
+        if(jump)
         {
             // myRb.AddForce(jumpVec * jumpForce, ForceMode.Impulse);
             myRb.velocity = jumpVec * jumpForce / myRb.mass;
@@ -40,11 +45,22 @@ public class SpongePropulsion : MonoBehaviour
         }
     }
 
-    public bool Jump(Vector3 vec)
+    public bool Jump(Vector3 vec, bool forceJump = false)
     {
-        if(!isGrounded || jump)
+        if((!isGrounded && !forceJump) || jump)
         {
             return false;
+        }
+        if(forceJump)
+        {
+            if(!dashStored)
+            {
+                return false;
+            }
+            else
+            {
+                dashStored = false;
+            }
         }
         jumpVec = vec.normalized; // Mathf.Clamp(vec.magnitude / 5f, 0.5f, 1f);
         jump = true;
@@ -55,27 +71,32 @@ public class SpongePropulsion : MonoBehaviour
     private void OnCollisionEnter(Collision other)
     {
         isGrounded = true;
+        dashStored = true;
         print("collision entered");
         if(water > 0f)
+        // if other is an enemy!
         {
-            // create splash effect
-            // splash the stains in the area!
-            // water -= amount
+            // attack!
         }
     }
 
     private void OnCollisionStay(Collision other)
     {
         isGrounded = true;
-        if(water > 0f)
-        {
-            // create impact sound
-        }
+        dashStored = true;
     }
 
     private void OnCollisionExit(Collision other)
     {
         print("collision left");
         isGrounded = false;
+    }
+
+    public void OnPaintCollision(int paintType)
+    {
+        audioSource.PlayOneShot(sound_splash);
+        var em = myPs.emission;
+        em.SetBursts(new ParticleSystem.Burst[]{new ParticleSystem.Burst(0.0f, 10)});
+        myPs.Play();
     }
 }

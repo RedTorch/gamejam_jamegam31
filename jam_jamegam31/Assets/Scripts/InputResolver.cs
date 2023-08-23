@@ -50,5 +50,15 @@ public class InputResolver : MonoBehaviour
                 bufferedDelta = delta;
             }
         }
+
+        if(Input.GetMouseButtonDown(1))
+        {
+            Vector3 mousePos = Input.mousePosition;
+            mousePos.z += 10f; // compensates for camera offset
+            Vector3 worldPoint = Camera.main.ScreenToWorldPoint(mousePos);
+            Vector3 delta = worldPoint - player.position;
+            print("air dash called:" + delta);
+            mySp.Jump(delta, true);
+        }
     }
 }
